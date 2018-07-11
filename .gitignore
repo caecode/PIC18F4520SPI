@@ -73,3 +73,4 @@ funclist
 nbproject/Makefile-*
 disassembly/
 *.map
+/PIC18F4520SPI.X/nbproject/private/
