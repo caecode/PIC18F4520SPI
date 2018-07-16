@@ -150,7 +150,7 @@ void writeEEPROM(char uLowerAddress, char uData){
     
     //END WRITE LATCH Sequence
     
-    //START WRITING SEQUENCE
+    //START WRITE INSTRUCTION
     
     //bring CS LOW
     LATCbits.LATC1=0;
@@ -174,6 +174,10 @@ void writeEEPROM(char uLowerAddress, char uData){
     
     //Read dummy data
     dummy=SSPBUF;
+    
+    //END WRITE INSTRUCTION
+    
+    //START WRITING SEQUENCE
     
     //send lower address
     
@@ -219,6 +223,10 @@ char readEEPROM(char uLowerAddress){
     
     //Read dummy data
     dummy=SSPBUF;
+    
+    //END READ instruction
+    
+    //START READING at Location
     
     //Send upper address
     
