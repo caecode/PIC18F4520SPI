@@ -74,30 +74,11 @@
 
 #define _XTAL_FREQ 8000000
 
-char dummy=0x00;
+char dummy;
 
-void writeEEPROM(int uAddress, char uData);
-char readEEPROM(int uAddress);
-void waitForTransmissionToComplete(void);
+void writeEEPROM(char uLowerAddress, char uData);
 
-void interrupt isr(void){
-    
-    //SPI interrupt flag
-    if(PIR1bits.SSPIF==1){
-        
-        
-//        //Read dummy data
-//        dummy=SSPBUF;
-//        
-//        
-//        SSPBUF=0x6F;
-//        
-//        //clear the flag
-//        PIR1bits.SSPIF=0;
-
-        
-    }
-}
+char readEEPROM(char uLowerAddress);
 
 void main(void) {
     
@@ -110,9 +91,10 @@ void main(void) {
     //SPI Master mode, clock fosc/4
     SSPCON1bits.SSPM=0x0;
     
-    //SPI CKP
+    //Set the SPI CKP and CKE bits
     SSPCON1bits.CKP=0;
     SSPSTATbits.CKE=0;
+    
     //Serial port enable bit. SCK TRIS bit must be cleared. SDO TRIS bit must be cleared. SDI is automatically controlled by the SPI module
     SSPCON1bits.SSPEN=1;
     
@@ -121,55 +103,44 @@ void main(void) {
     TRISCbits.RC3=0; //SCK
     TRISCbits.RC5=0; //SDO
     
-    
     TRISCbits.RC1=0; //CS
     TRISCbits.RC2=0; //WP (EEPROM write protect pin)
     
     LATCbits.LATC2=1; //WP high for writes
     
-    //Enable global interrupts
-    INTCONbits.GIE=0;
-     
-    //Enable peripheral interrupts
-    INTCONbits.PEIE=0;
-
-    //Enable the SPI interrupt
+    //Write data 0x07 to address 0x12
+    writeEEPROM(0x12,0x07);
     
-    PIE1bits.SSPIE=0;
-    
-    //set the SPI interrupt priority
-    
-    IPR1bits.SSPIP=0;
-    
-    //Disable interrupt priority
-    RCONbits.IPEN=0;
-    
-    
-    writeEEPROM(0x12,012);
-    
+    //Wait 5 ms. This delay is required. You shouldn't read an EEPROM address immediately after writing it. 
     __delay_ms(5);
     
+    //Read the data at address 0x12
     LATD=readEEPROM(0x12);
     
     while(1);
     
 }
 
-void writeEEPROM(int uAddress, char uData){
+void writeEEPROM(char uLowerAddress, char uData){
     
-    //Set up the write latch sequence
-    
+    //WREN Instruction 
     char wrenInstruction=0x06;
+    
+    //WRITE Instruction
     char writeInstruction=0x02;
+    
+    //Before you write to an EEPROm, you must initiate a Write Latch Sequence
+    
+    //START WRITE LATCH Sequence
     
     //bring CS LOW
     LATCbits.LATC1=0;
     
-    //load the wren sequence
+    //load the WREN Instruction into the SSPBUF
     SSPBUF=wrenInstruction;
     
     //wait for transmission to complete
-    while(SSPSTATbits.BF==0);
+    while(!SSPSTATbits.BF);
     
     //Read dummy data
     dummy=SSPBUF;
@@ -177,17 +148,19 @@ void writeEEPROM(int uAddress, char uData){
     //bring CS HIGH
     LATCbits.LATC1=1;
     
-    //wait
-    //__delay_us(10);
+    //END WRITE LATCH Sequence
+    
+    //START WRITING SEQUENCE
     
     //bring CS LOW
     LATCbits.LATC1=0;
     
-    //start writing data to the address specified
+    //Let the EEPROM device know that you want to start writing data into it.
+    
     SSPBUF=writeInstruction;
     
     //wait for transmission to complete
-    while(SSPSTATbits.BF==0);
+    while(!SSPSTATbits.BF);
     
     //Read dummy data
     dummy=SSPBUF;
@@ -197,27 +170,27 @@ void writeEEPROM(int uAddress, char uData){
     SSPBUF=0x00;
     
     //wait for transmission to complete
-    while(SSPSTATbits.BF==0);
+    while(!SSPSTATbits.BF);
     
     //Read dummy data
     dummy=SSPBUF;
     
     //send lower address
     
-    SSPBUF=0x01;
+    SSPBUF=uLowerAddress;
     
     //wait for transmission to complete
-    while(SSPSTATbits.BF==0);
+    while(!SSPSTATbits.BF);
     
     //Read dummy data
     dummy=SSPBUF;
     
-    //send data
+    //send data to write
     
-    SSPBUF=0x08;
+    SSPBUF=uData;
     
     //wait for transmission to complete
-    while(SSPSTATbits.BF==0);
+    while(!SSPSTATbits.BF);
     
     //Read dummy data
     dummy=SSPBUF;
@@ -225,37 +198,44 @@ void writeEEPROM(int uAddress, char uData){
     //bring CS HIGH
     LATCbits.LATC1=1;
     
+    //END WRITE SEQUENCE
+    
 }
 
-char readEEPROM(int uAddress){
+char readEEPROM(char uLowerAddress){
     
+    //READ Instruction
     char readInstruction=0x03;
 
+    //START READ Instruction
+    
     //bring CS LOW
     LATCbits.LATC1=0;
     
     SSPBUF=readInstruction;
     
     //wait for transmission to complete
-    while(SSPSTATbits.BF==0);
+    while(!SSPSTATbits.BF);
     
     //Read dummy data
     dummy=SSPBUF;
     
     //Send upper address
+    
     SSPBUF=0x00;
     
     //wait for transmission to complete
-    while(SSPSTATbits.BF==0);
+    while(!SSPSTATbits.BF);
     
     //Read dummy data
     dummy=SSPBUF;
     
     //send lower address
-    SSPBUF=0x01;
+    
+    SSPBUF=uLowerAddress;
     
     //wait for transmission to complete
-    while(SSPSTATbits.BF==0);
+    while(!SSPSTATbits.BF);
     
     //Read dummy data
     dummy=SSPBUF;
@@ -264,16 +244,11 @@ char readEEPROM(int uAddress){
     SSPBUF=0x00;
     
     //wait for transmission to complete
-    while(SSPSTATbits.BF==0);
+    while(!SSPSTATbits.BF);
     
     //Read EEPROM DATA
     dummy=SSPBUF;
     
     return dummy;
-}
-
-void waitForTransmissionToComplete(void){
-    
-    while(!PIR1bits.SSPIF);
     
 }
