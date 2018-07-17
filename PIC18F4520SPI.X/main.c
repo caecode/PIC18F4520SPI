@@ -95,9 +95,6 @@ void main(void) {
     SSPCON1bits.CKP=0;
     SSPSTATbits.CKE=0;
     
-    //Serial port enable bit. SCK TRIS bit must be cleared. SDO TRIS bit must be cleared. SDI is automatically controlled by the SPI module
-    SSPCON1bits.SSPEN=1;
-    
     //SCK=RC3, SDO=RC5, SDI=RC4, RC1= CS, RC2= WP (EEPROM module)
     
     TRISCbits.RC3=0; //SCK
@@ -107,6 +104,9 @@ void main(void) {
     TRISCbits.RC2=0; //WP (EEPROM write protect pin)
     
     LATCbits.LATC2=1; //WP high for writes
+    
+    //Serial port enable bit. SCK TRIS bit must be cleared. SDO TRIS bit must be cleared. SDI is automatically controlled by the SPI module
+    SSPCON1bits.SSPEN=1;
     
     //Write data 0x07 to address 0x12
     writeEEPROM(0x12,0x07);
@@ -208,6 +208,8 @@ void writeEEPROM(char uLowerAddress, char uData){
 
 char readEEPROM(char uLowerAddress){
     
+    char eepromData=0x00;
+    
     //READ Instruction
     char readInstruction=0x03;
 
@@ -255,8 +257,8 @@ char readEEPROM(char uLowerAddress){
     while(!SSPSTATbits.BF);
     
     //Read EEPROM DATA
-    dummy=SSPBUF;
+    eepromData=SSPBUF;
     
-    return dummy;
+    return eepromData;
     
 }
