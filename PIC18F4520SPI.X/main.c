@@ -133,36 +133,36 @@ void writeEEPROM(char uLowerAddress, char uData){
     
     //START WRITE LATCH Sequence
     
-    //bring CS LOW
+    //Line 1. bring CS LOW
     LATCbits.LATC1=0;
     
-    //load the WREN Instruction into the SSPBUF
+    //Line 2. load the WREN Instruction into the SSPBUF
     SSPBUF=wrenInstruction;
     
-    //wait for transmission to complete
+    //Line 3. wait for transmission to complete
     while(!SSPSTATbits.BF);
     
-    //Read dummy data
+    //Line 4. Read dummy data
     dummy=SSPBUF;
     
-    //bring CS HIGH
+    //Line 5. bring CS HIGH
     LATCbits.LATC1=1;
     
     //END WRITE LATCH Sequence
     
     //START WRITE INSTRUCTION
     
-    //bring CS LOW
+    //Line 6. bring CS LOW
     LATCbits.LATC1=0;
     
-    //Let the EEPROM device know that you want to start writing data into it.
+    //Line 7. Let the EEPROM device know that you want to start writing data into it.
     
     SSPBUF=writeInstruction;
     
-    //wait for transmission to complete
+    //Line 8. wait for transmission to complete
     while(!SSPSTATbits.BF);
     
-    //Read dummy data
+    //Line 9. Read dummy data
     dummy=SSPBUF;
     
     //Send upper address
@@ -179,27 +179,27 @@ void writeEEPROM(char uLowerAddress, char uData){
     
     //START WRITING SEQUENCE
     
-    //send lower address
+    //Line 10. send lower address
     
     SSPBUF=uLowerAddress;
     
-    //wait for transmission to complete
+    //Line 11. wait for transmission to complete
     while(!SSPSTATbits.BF);
     
-    //Read dummy data
+    //Line 12. Read dummy data
     dummy=SSPBUF;
     
-    //send data to write
+    //Line 13. send data to write
     
     SSPBUF=uData;
     
-    //wait for transmission to complete
+    //Line 14. wait for transmission to complete
     while(!SSPSTATbits.BF);
     
     //Read dummy data
     dummy=SSPBUF;
     
-    //bring CS HIGH
+    //Line 15. bring CS HIGH
     LATCbits.LATC1=1;
     
     //END WRITE SEQUENCE
@@ -210,53 +210,53 @@ char readEEPROM(char uLowerAddress){
     
     char eepromData=0x00;
     
-    //READ Instruction
+    //Line 16. READ Instruction
     char readInstruction=0x03;
 
     //START READ Instruction
     
-    //bring CS LOW
+    //Line 17. bring CS LOW
     LATCbits.LATC1=0;
     
     SSPBUF=readInstruction;
     
-    //wait for transmission to complete
+    //Line 18. wait for transmission to complete
     while(!SSPSTATbits.BF);
     
-    //Read dummy data
+    //Line 19. Read dummy data
     dummy=SSPBUF;
     
     //END READ instruction
     
     //START READING at Location
     
-    //Send upper address
+    //Line 20. Send upper address
     
     SSPBUF=0x00;
     
-    //wait for transmission to complete
+    //Line 21. wait for transmission to complete
     while(!SSPSTATbits.BF);
     
-    //Read dummy data
+    //Line 22. Read dummy data
     dummy=SSPBUF;
     
-    //send lower address
+    //Line 23. send lower address
     
     SSPBUF=uLowerAddress;
     
-    //wait for transmission to complete
+    //Line 24. wait for transmission to complete
     while(!SSPSTATbits.BF);
     
-    //Read dummy data
+    //Line 25. Read dummy data
     dummy=SSPBUF;
     
-    //send dummy data
+    //Line 26. send dummy data
     SSPBUF=0x00;
     
-    //wait for transmission to complete
+    //Line 27. wait for transmission to complete
     while(!SSPSTATbits.BF);
     
-    //Read EEPROM DATA
+    //Line 28. Read EEPROM DATA
     eepromData=SSPBUF;
     
     return eepromData;
